@@ -1,0 +1,245 @@
+# Enhanced ETL Pipeline Configuration
+# Gene Expression Data Processing for SQL Server 2022
+
+# Database Configuration
+database:
+  connection_string: "Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=BioinformaticsWarehouse;Trusted_Connection=yes;"
+  database_name: "BioinformaticsWarehouse"
+
+# File System Configuration
+filesystem:
+  base_path: "/data/gene_expression"
+  study_code_pattern: "[A-Za-z]{2,3}-[A-Za-z]{3}-\\d+|[A-Za-z]{3}\\d+"
+  json_metadata_file: "aggregated_metadata.json"
+  expression_data_pattern: "{study_code}/{study_code}.tsv"
+
+# Processing Configuration
+processing:
+  chunk_size: 50000  # Number of genes to process per chunk
+  max_workers: 4     # Parallel processing workers
+  memory_limit_mb: 8192  # Maximum memory usage
+  timeout_seconds: 7200  # 2 hours timeout
+  retry_attempts: 3
+  retry_delay_seconds: 5
+
+# Illness Inference Configuration
+illness_inference:
+  rules:
+    - pattern: "\\b(septic\\s*shock|sshock|septic_shock|shock)\\b"
+      label: "SEPTIC_SHOCK"
+      priority: 1
+      description: "Septic shock indicators"
+    - pattern: "\\bno[-_\\s]?sepsis\\b|\\bnon[-_\\s]?sepsis\\b"
+      label: "NO_SEPSIS"
+      priority: 2
+      description: "No sepsis indicators"
+    - pattern: "\\bsepsis\\b"
+      label: "SEPSIS"
+      priority: 3
+      description: "Sepsis indicators"
+    - pattern: "\\bcontrol\\b|\\bhealthy\\b"
+      label: "CONTROL"
+      priority: 4
+      description: "Control/healthy samples"
+  
+  # Study-specific illness overrides
+  overrides:
+    # Example overrides - add specific sample accession codes and their illness labels
+    SRR1652895: "CONTROL"
+    SRR1652896: "SEPSIS"
+    # Add more overrides as needed
+
+# Platform Normalization Configuration
+platform_normalization:
+  manufacturer_lookup:
+    illumina: "Illumina"
+    affymetrix: "Affymetrix"
+    agilent: "Agilent"
+    roche: "Roche"
+    454: "Roche 454"
+    thermo: "Thermo Fisher Scientific"
+    applied_biosystems: "Applied Biosystems"
+  
+  # Platform-specific mappings
+  platform_mapping:
+    "Illumina Genome Analyzer":
+      manufacturer: "Illumina"
+      technology: "RNA-SEQ"
+    "Illumina HiSeq":
+      manufacturer: "Illumina"
+      technology: "RNA-SEQ"
+    "Affymetrix HG-U133":
+      manufacturer: "Affymetrix"
+      technology: "MICROARRAY"
+
+# Data Quality Configuration
+quality_thresholds:
+  max_null_percentage: 0.1      # Maximum 10% null values
+  max_duplicate_percentage: 0.05  # Maximum 5% duplicates
+  min_genes_per_sample: 1000    # Minimum genes required per sample
+  min_samples_per_study: 3      # Minimum samples per study
+  max_missing_samples_percentage: 0.2  # Maximum 20% missing samples
+  max_expression_range: 1000000  # Reasonable upper limit for expression values
+
+# Validation Configuration
+validation:
+  validate_gene_symbols: true
+  validate_sample_accessions: true
+  check_data_integrity: true
+  
+  # Illness coverage requirements
+  illness_coverage:
+    min_non_unknown_percentage: 0.95  # At least 95% of samples should have non-UNKNOWN illness
+    warn_if_lower: true
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  file: "/var/log/etl/enhanced_pipeline.log"
+  rotation: true
+  max_size_mb: 100
+  backup_count: 5
+  
+  # Structured logging for monitoring
+  structured_format: true
+  include_context: true
+
+# Performance Monitoring
+monitoring:
+  enable_performance_logging: true
+  log_slow_queries: true
+  slow_query_threshold_ms: 1000
+  
+  # Memory monitoring
+  memory_monitoring:
+    enabled: true
+    warn_threshold_percent: 80
+    critical_threshold_percent: 90
+  
+  # Disk space monitoring
+  disk_monitoring:
+    enabled: true
+    warn_threshold_percent: 85
+    critical_threshold_percent: 95
+
+# Analytics Interface Configuration
+analytics:
+  # Materialized views refresh
+  refresh_materialized_views: true
+  
+  # Feature catalog for ML integration
+  feature_catalog:
+    enabled: true
+    features:
+      - name: "mean_expression"
+        description: "Mean expression value per gene"
+        scope: "GENE"
+      - name: "std_expression"
+        description: "Standard deviation of expression"
+        scope: "GENE"
+      - name: "cv_expression"
+        description: "Coefficient of variation"
+        scope: "GENE"
+      - name: "correlation"
+        description: "Correlation coefficient"
+        scope: "GENE_PAIR"
+
+# Error Handling Configuration
+error_handling:
+  # Retry configuration
+  max_retries: 3
+  retry_delay_seconds: 5
+  exponential_backoff: true
+  
+  # Error codes and thresholds
+  error_codes:
+    AGG_MISSING_DISEASE_MAP: 54001
+    AGG_MULTI_DISEASE_MAP: 54002
+    SOURCE_MISMATCH_SAMPLES: 54010
+    UNIT_UNDETECTED: 54020
+    HETEROGENEITY_EXCESS: 54100
+  
+  # Validation error thresholds
+  validation_errors:
+    max_validation_errors: 10  # Stop processing if more than 10 validation errors
+    continue_on_warning: true
+
+# Security Configuration
+security:
+  # Data encryption
+  encrypt_connections: true
+  tls_version: "1.2"
+  
+  # Access control
+  use_service_principals: true
+  min_privilege_roles:
+    - etl_reader
+    - etl_loader
+    - etl_admin
+
+# SLA Configuration
+sla:
+  # Performance targets
+  target_records_per_second: 10000
+  max_study_load_time_minutes: 60
+  
+  # Quality targets
+  target_data_quality_score: 95.0
+  max_duplicate_percentage: 0.05
+  
+  # Availability targets
+  target_uptime_percentage: 99.5
+  max_downtime_minutes_per_month: 220
+
+# Notification Configuration
+notifications:
+  # Success notifications
+  on_success: false
+  
+  # Failure notifications
+  on_failure: true
+  
+  # Warning notifications
+  on_warning: true
+  
+  # Quality issue notifications
+  on_quality_issue: true
+
+# Development/Testing Configuration
+development:
+  # Test data generation
+  generate_test_data: false
+  test_data_size: "small"  # small, medium, large
+  
+  # Debug mode
+  debug_mode: false
+  verbose_logging: false
+  
+  # Performance profiling
+  profile_performance: false
+  memory_profiling: false
+
+# Advanced Configuration
+advanced:
+  # Batch processing optimization
+  batch_processing:
+    use_temp_tables: true
+    parallel_bulk_load: true
+    optimize_for_oltp: false
+  
+  # Index management
+  index_management:
+    create_columnstore_indexes: true
+    create_composite_indexes: true
+    update_statistics: true
+  
+  # Partitioning
+  partitioning:
+    enabled: true
+    partition_by: "study_key"
+    partition_count: 10
+  
+  # Compression
+  compression:
+    enabled: true
+    compression_type: "COLUMNSTORE"  # ROW, PAGE, COLUMNSTORE

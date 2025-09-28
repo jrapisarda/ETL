@@ -1,0 +1,12 @@
+Data\raw\
+Archive\
+Logs\
+Temp\
+Outputs\
+Artifacts\
+*.log
+*.tmp
+*.bak
+*.TSV
+*.csv
+.env
