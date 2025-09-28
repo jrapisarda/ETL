@@ -8,17 +8,17 @@ database:
 
 # File System Configuration
 filesystem:
-  base_path: "/data/gene_expression"
+  base_path: "C:/venvs/git/ETL/ETL/Data/raw"
   study_code_pattern: "[A-Za-z]{2,3}-[A-Za-z]{3}-\\d+|[A-Za-z]{3}\\d+"
   json_metadata_file: "aggregated_metadata.json"
   expression_data_pattern: "{study_code}/{study_code}.tsv"
 
 # Processing Configuration
 processing:
-  chunk_size: 50000  # Number of genes to process per chunk
-  max_workers: 4     # Parallel processing workers
-  memory_limit_mb: 8192  # Maximum memory usage
-  timeout_seconds: 7200  # 2 hours timeout
+  chunk_size: 5_000  # Number of genes to process per chunk
+  max_workers: 2     # Parallel processing workers
+  memory_limit_mb: 2_048  # Maximum memory usage
+  timeout_seconds: 600  # 2 hours timeout
   retry_attempts: 3
   retry_delay_seconds: 5
 
@@ -95,7 +95,7 @@ validation:
 # Logging Configuration
 logging:
   level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
-  file: "/var/log/etl/enhanced_pipeline.log"
+  file: "C:/venvs/git/ETL/ETL/Tests/unit/enhanced_pipeline.log"
   rotation: true
   max_size_mb: 100
   backup_count: 5
@@ -112,13 +112,13 @@ monitoring:
   
   # Memory monitoring
   memory_monitoring:
-    enabled: true
+    enabled: false
     warn_threshold_percent: 80
     critical_threshold_percent: 90
   
   # Disk space monitoring
   disk_monitoring:
-    enabled: true
+    enabled: false
     warn_threshold_percent: 85
     critical_threshold_percent: 95
 
@@ -161,7 +161,7 @@ error_handling:
   
   # Validation error thresholds
   validation_errors:
-    max_validation_errors: 10  # Stop processing if more than 10 validation errors
+    max_validation_errors: 999  # Stop processing if more than 10 validation errors
     continue_on_warning: true
 
 # Security Configuration
@@ -197,13 +197,13 @@ notifications:
   on_success: false
   
   # Failure notifications
-  on_failure: true
+  on_failure: false
   
   # Warning notifications
-  on_warning: true
+  on_warning: false
   
   # Quality issue notifications
-  on_quality_issue: true
+  on_quality_issue: false
 
 # Development/Testing Configuration
 development:

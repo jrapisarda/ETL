@@ -24,6 +24,7 @@ import numpy as np
 import pyodbc
 import pyarrow.csv as pv
 import pyarrow as pa
+import chardet 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import re
 from dataclasses import dataclass, field
@@ -78,8 +79,8 @@ class EnhancedETLConfig:
             config_data = yaml.safe_load(f)
         
         # Set default illness rules if not provided
-        if not config_data.get('illness_inference_rules'):
-            config_data['illness_inference_rules'] = [
+        if not config_data.get('illness_inference',{}).get('rules'):
+            config_data.setdefault('illness_inference',{})['rules'] = [
                 {
                     'pattern': r'\b(septic\s*shock|sshock|septic_shock|shock)\b',
                     'label': 'SEPTIC_SHOCK',

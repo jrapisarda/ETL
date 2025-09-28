@@ -18,6 +18,7 @@ from typing import Dict, Any, List
 import traceback
 import pytest
 import yaml
+import hashlib
 from unittest.mock import Mock, patch, MagicMock
 
 # Add parent directory to path for imports
@@ -300,7 +301,7 @@ class TestEnhancedDataExtractor:
             },
             "ks_statistic": 0.438,
             "ks_pvalue": 0.0,
-            "quantile_normalized": true
+            "quantile_normalized": True 
         }
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
